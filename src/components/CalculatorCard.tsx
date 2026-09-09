@@ -50,6 +50,7 @@ const fieldSx: SxProps<Theme> = {
   alignItems: "center",
   justifyContent: "space-between",
   gap: 1,
+  minWidth: 0,
   bgcolor: FIELD_BG,
   borderRadius: 2.5,
   px: 2,
@@ -62,19 +63,23 @@ const labelSx: SxProps<Theme> = {
   letterSpacing: "0.08em",
   textTransform: "uppercase",
   color: "#8E90B0",
-  flexShrink: 0,
+  minWidth: 0,
 };
 
 const selectSx: SxProps<Theme> = {
+  // flex-basis 0 + minWidth 0 keeps the option text from dictating the card's
+  // minimum width — it takes the space left over from the label and ellipsises.
+  flex: "1 1 0",
   minWidth: 0,
+  maxWidth: 180,
   "& .MuiInputBase-input": {
     p: 0,
     pr: "22px",
     textAlign: "right",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 500,
     color: "text.primary",
-    maxWidth: 180,
+    maxWidth: "100%",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
@@ -123,10 +128,7 @@ export default function CalculatorCard({
   const [visitType, setVisitType] = useState<VisitType>("repair");
   const [carType, setCarType] = useState<CarTypeKey>("car");
   const repairServices = useMemo(
-    () =>
-      rates.services.filter(
-        (s) => s.key !== "minCall" && s.key !== "seasonalSet",
-      ),
+    () => rates.services.filter((s) => s.key !== "seasonalSet"),
     [rates.services],
   );
   const [serviceKey, setServiceKey] = useState<ServiceKey>(
@@ -149,7 +151,8 @@ export default function CalculatorCard({
   // Night only has real pricing behind it for call-outs that add to the
   // мінімальний виїзд base — engine start / fuel delivery have no night price.
   const nightAffectsRepair =
-    visitType === "repair" && service?.mode === "addon";
+    visitType === "repair" &&
+    (service?.mode === "addon" || service?.key === "minCall");
 
   const total = useMemo(() => {
     if (!car) return 0;
@@ -177,16 +180,22 @@ export default function CalculatorCard({
     }
 
     if (!service) return 0;
-    // Мінімальний виїзд is a flat call-out fee — the same for every car type.
+    // Every repair visit starts from the мінімальний виїзд call-out, which is
+    // itself car-type priced (легковий vs кросовер/джип); at night the flat
+    // нічний виїзд price replaces it. Запуск двигуна and підвіз палива are
+    // complete visit prices on their own and never add the call-out.
     const minCall = rates.services.find((s) => s.key === "minCall");
-    const dayCallOut = minCall?.base ?? 0;
-    const callOut =
-      night && service.mode === "addon" ? rates.nightCallOut : dayCallOut;
+    const dayCallOut = minCall
+      ? (minCall.overrides?.[carType] ?? minCall.base)
+      : 0;
+    const callOut = night ? rates.nightCallOut : dayCallOut;
 
     const subtotal =
-      service.mode === "standalone"
-        ? (service.overrides?.[carType] ?? service.base)
-        : callOut + service.base;
+      service.key === "minCall"
+        ? callOut
+        : service.mode === "standalone"
+          ? (service.overrides?.[carType] ?? service.base)
+          : callOut + service.base;
     // Round trip — the master drives out and back.
     const distanceFee = outOfCity
       ? rates.outCityPerKm * Math.max(0, distanceKm) * 2
@@ -212,6 +221,7 @@ export default function CalculatorCard({
       sx={{
         p: { xs: 2.5, md: 3 },
         borderRadius: 3,
+        width: "100%",
         maxWidth: 480,
         border: "1px solid",
         borderColor: "divider",
@@ -307,7 +317,10 @@ export default function CalculatorCard({
                 input={<InputBase />}
                 IconComponent={KeyboardArrowDownIcon}
                 sx={selectSx}
-                MenuProps={{ slotProps: { paper: { sx: { maxWidth: 320 } } } }}
+                MenuProps={{
+                  disableScrollLock: true,
+                  slotProps: { paper: { sx: { maxWidth: 390 } } },
+                }}
               >
                 {repairServices.map((s) => (
                   <MenuItem
@@ -315,7 +328,7 @@ export default function CalculatorCard({
                     value={s.key}
                     sx={{
                       whiteSpace: "wrap",
-                      fontSize: "11px",
+                      fontSize: "14px",
                       lineHeight: 1.3,
                     }}
                   >
@@ -404,6 +417,7 @@ export default function CalculatorCard({
                 input={<InputBase />}
                 IconComponent={KeyboardArrowDownIcon}
                 sx={selectSx}
+                MenuProps={{ disableScrollLock: true }}
               >
                 {rates.zones.map((z) => (
                   <MenuItem key={z.key} value={z.key}>

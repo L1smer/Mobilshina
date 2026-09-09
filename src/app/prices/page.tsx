@@ -73,7 +73,10 @@ export default async function PricesPage() {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { lg: "1fr 400px" },
+              gridTemplateColumns: {
+                xs: "minmax(0, 1fr)",
+                lg: "minmax(0, 1fr) 400px",
+              },
               gap: { xs: 3, md: 4 },
               alignItems: "start",
             }}

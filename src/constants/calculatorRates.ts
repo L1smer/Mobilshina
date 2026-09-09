@@ -65,21 +65,15 @@ export const CAR_TYPES: CarTypeOption[] = [
 /** Real priceIds — the same ones `PriceGroups` reads for the /prices page. */
 export const CALC_SERVICES: ServiceOption[] = [
   {
-    // Flat call-out fee — same price regardless of car type.
     key: "minCall",
-    label: "Мінімальний виїзд майстра",
+    label: "Виклик з нескладним ремонтом",
     priceId: "price-min-call",
-    fallback: 1500,
     mode: "standalone",
-  },
-  {
-    // price-min-call already covers a simple/uncomplicated repair — this option
-    // adds nothing on top, it's the call-out price on its own (per owner note).
-    key: "simpleRepair",
-    label: "Нескладний ремонт (виклик майстра)",
-    priceId: "price-simple-repair",
-    fallback: 0,
-    mode: "addon",
+    fallback: 1500,
+    carTypeOverrides: {
+      suv: { priceId: "price-suv", fallback: 2200 },
+      minibus: { priceId: "price-suv", fallback: 2200 },
+    },
   },
   {
     key: "cut",
