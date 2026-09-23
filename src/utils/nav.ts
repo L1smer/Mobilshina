@@ -18,7 +18,7 @@ export const VIBER_HREF = "viber://chat?number=%2B380958780726";
 export const EMAIL = "mobilshina2010@gmail.com";
 export const LEGAL_NAME = 'ФОП «Краснов Сергій Ігорович»';
 export const CITY = "Одеса";
-export const SCHEDULE_SHORT = "Цілодобово, 7/7";
+export const SCHEDULE_SHORT = "Цілодобово, 24/7";
 export const SCHEDULE_LONG = "Цілодобово, 7 днів на тиждень";
 export const COVERAGE = "Одеса та передмістя";
 export const ZONES = ["Одеса", "Котовського", "Совіньйон", "Передмістя"];
